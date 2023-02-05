@@ -15,5 +15,5 @@
 - 自动调速
 - 智能检测（未上传原代码）
 
-更多技术细节可以看我的[这篇博客](#https://asa-world.cn/f5eadc1/)。
+更多技术细节可以看我的这篇博客：https://asa-world.cn/f5eadc1/
 
