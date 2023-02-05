@@ -1,0 +1,122 @@
+/*
+版权声明：
+深圳市小二极客科技（小R科技）旗下：WIFI机器人网·机器人创意工作室版权所有www.wifi-robots.com
+您可以任意修改本程序，并应用于自行研发的智能小车机器人及其他电子产品上，但是禁止用于商业牟利。
+小R科技保留付诸法律起诉侵权的权利！2016-4-1
+BY WIFI机器人网·机器人创意工作室
+*/
+
+/**************************** WiFi 机器人创意工作室 *******************************
+主芯片：STM32F103RCT6
+ 功能     名称              I/O             TIMER         功能
+
+电机：    ena              PA0             TIM2/CH1
+          enb              PA1             YIM2/CH2
+          IN1              PC6
+          IN2              PC7
+          IN3              PC8
+          IN4              PC9
+舵机：    SER1             PA2             TIMER2/CH3
+          SER2             PA3             TIMER2/CH4
+
+串口：    TXD              PA9
+          RXD              PA10
+
+PWM：    舵机1/  11~       PA6             TIMER3/CH1
+         舵机2/  2         PA7             TIMER3/CH2
+         舵机3/  4         PB0             TIMER3/CH3
+         舵机4/  3~        PB1             TIMER3/CH4
+
+I/O：    A15  /  A5        PC5             ADC12-IN15       Echo
+         A14  /  A4        PC4             ADC12-IN14       Trig
+         A13  /  A3        PC3             ADC12-IN13       左红外
+         A12  /  A2        PC2             ADC12-IN12       右红外
+         A11  /  A1        PC1             ADC12-IN11       中红外
+         A10  /  A0        PC0             ADC12-IN10       车灯
+
+**********************************************************************************/
+
+#include "stm32f10x.h"
+#include "stm32f10x_it.h"
+#include "SysTick.h"
+#include "usart1.h"
+#include "usart2.h"
+#include "Timer.h"
+#include "function.h"
+#include "i2c_eeprom.h"
+#include "Config.h"
+#include "Motor.h"
+#include "Ultrasonic.h"
+#include "Servo.h"
+#include "DHT11.h"
+#include <stdio.h>
+
+
+//**************以下代码为重定义printf函数*****************
+#ifdef __GNUC__ 
+  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)   
+#else 
+  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f) 
+#endif /* __GNUC__ */ 
+PUTCHAR_PROTOTYPE 
+{ 
+  USART_SendData(USART1, (u16) ch); 
+  while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET) 
+  { 
+  } 
+  return ch; 
+}
+//**************以上代码为重定义printf函数*****************
+
+
+
+
+extern u8 aFlag;
+extern u16 speed_left;
+extern u16 speed_right;
+extern int Cruising_Flag;
+extern int Pre_Cruising_Flag;
+extern u8 Angle[8];
+extern u8 num; 
+
+
+/*
+ * 函数名：main
+ * 描述  ：程序入口函数
+ * 输入  ：无
+ * 输出  ：无
+ * 调用  ：无
+ */
+void main(void)
+{
+  /* 设置系统时钟为72M */
+  SystemInit();
+  
+  SysTick_Configuration();  //SysTick中断配置，主要用来定时
+  
+  MOTOR_GPIO_Config();  //电机引脚初始化
+  
+  I2C_EEPROM_Init();  //I2C初始化 
+  
+  Testapp();  //进入测试模式
+  
+  Init_Steer();  //舵机及角度初始化 
+  
+  USART1_Config();  //串口初始化 
+  
+  Wave_GPIO_Config();  //超声波引脚初始化
+  
+  Infrared_GPIO_Config();  //红外引脚初始化
+  
+  TIM3_PWM_Init();  //TIME3初始化
+  
+  TIM4_PWM_Init();  //TIME4初始化
+
+  while (1)
+  {
+ 
+     Cruising();//模式功能切换   
+   
+  }
+}	
+
